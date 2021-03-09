@@ -4,7 +4,17 @@ const bookSchema = new mongoose.Schema({
   author: {
     // required: true,
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "Author",
+  },
+  editor: {
+    type : [String]
+  },
+  chapters : {
+    type : [String]
+  },
+  docID : {
+    type : String,
+    required : true
   },
   pdfUrl : {
     type: String,
@@ -28,7 +38,7 @@ const bookSchema = new mongoose.Schema({
       {
         commentBy: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
+          ref: "Reader",
           required: true,
         },
         date: { type: Date, default: Date.now },
@@ -43,10 +53,10 @@ const bookSchema = new mongoose.Schema({
     likers: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Reader",
       },
     ],
   },
 });
 
-module.exports = mongoose.model("Post", bookSchema);
+module.exports = mongoose.model("Book", bookSchema);
