@@ -83,35 +83,46 @@ app.get('/checkauthor', (req, res) => {
 app.post('/addauthor', (req, res) => {
   console.log(req.cookies);
   console.log(req.body.name);
+
   const newAuthor = {
     email: req.body.email,
     GID: req.body.GID,
-    Fname: req.body.Fname,
-    Lname: req.body.Lname,
-    Mnumber : req.body.Mnumber,
-    Twitter : req.body.Twitter,
-    City : req.body.City,
-    State : req.body.State,
-    Country : req.body.Country,
-    Company : req.body.Company,
-    Clocation : req.body.Clocation,
-    Bio : req.body.Bio,
-    Website : req.body.Website,
-    picUrl: req.body.picUrl,
+    Fname: req.body.fname,
+    Lname: req.body.lname,
+    Mnumber : req.body.mobile,
+    Twitter : req.body.twitter,
+    City : req.body.city,
+    State : req.body.state,
+    Country : req.body.country,
+    Company : req.body.company,
+    Clocation : req.body.location,
+    Bio : req.body.AboutYourself,
+    Website : req.body.website,
+    picUrl: req.body.imgUrl,
     linkedInUrl: req.body.linkedInUrl,
   };
-  Author.find({ GID: req.body.GID }, (err, user) => {
+  console.log(newAuthor);
+
+  Author.find({ email: req.body.email }, (err, user) => {
     console.log(err);
     if(user.length > 0){
-      res.send('Profile Already Complated')
+      Author.updateOne(
+        {email : req.body.email},
+        {
+          $set : {
+             ...user, ...newAuthor 
+          },
+        }
+      )
+      .then((res)=> console.log(res))
+      .catch((err)=> console.log(err));
     }
     else{
       Author.create(newAuthor)
         .then((res) => console.log(res))
         .catch((err) => console.log(err));
-
-      res.send('success');
     }
+    res.send('success');
   });
 });
 
