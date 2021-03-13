@@ -7,6 +7,7 @@ const cors = require('cors')
 const connectDB = require("./db.js");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
+const multer = require('multer');
 
 //Allow CORS
 app.use(cors());
@@ -36,6 +37,39 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 
+
+// Set Disk Storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+  cb(null, 'books')
+},
+  filename: function (req, file, cb) {
+  cb(null, req.query.docID)
+}
+});
+
+const upload = multer({ storage: storage });
+
+
+//Handling Upload Request
+app.post('/uploadbook', upload.single('book'), (req, res, next) => {
+  const file = req.file
+  console.log(file);
+  if (!file) {
+    const error = new Error('Please upload a file')
+    error.httpStatusCode = 400
+    return next(error)
+  }
+    res.send(file)
+  
+});
+
+//Handling Get File Request
+app.get('/book',(req,res,next)=>{
+  const name = req.query.docID;
+  res.download(`./books/${name}`);
+
+});
 
 
 
