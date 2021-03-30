@@ -40,7 +40,9 @@ const storage = multer.diskStorage({
     cb(null, "books");
   },
   filename: function (req, file, cb) {
-    cb(null, req.query.docID);
+    const name = req.query.docID + ".pdf";
+    console.log(name);
+    cb(null, name);
   },
 });
 
@@ -50,6 +52,7 @@ const upload = multer({ storage: storage });
 app.post("/uploadbook", upload.single("book"), (req, res, next) => {
   const file = req.file;
   console.log(file);
+  // console.log(req);
   if (!file) {
     const error = new Error("Please upload a file");
     error.httpStatusCode = 400;
@@ -60,7 +63,7 @@ app.post("/uploadbook", upload.single("book"), (req, res, next) => {
 
 //Handling Get File Request
 app.get("/book", (req, res, next) => {
-  const name = req.query.docID;
+  const name = req.query.docID + ".pdf";
   res.download(`./books/${name}`);
 });
 
