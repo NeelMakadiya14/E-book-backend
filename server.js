@@ -1,28 +1,26 @@
 require("dotenv").config();
-const path=require('path');
+const path = require("path");
 const express = require("express");
 const app = express();
-const http = require('http')
-const cors = require('cors')
+const http = require("http");
+const cors = require("cors");
 const connectDB = require("./db.js");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
-const multer = require('multer');
+const multer = require("multer");
 
 //Allow CORS
 app.use(cors());
 
-
 const server = http.createServer(app);
 
-const port=process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 server.listen(port, () => console.log(`server is running on port ${port}`));
 
 //importing Models
-const Book = require('./Models/Book');
-const Author = require('./Models/Author');
-const Reader = require('./Models/Reader');
-
+const Book = require("./Models/Book");
+const Author = require("./Models/Author");
+const Reader = require("./Models/Reader");
 
 //Logging
 if (process.env.NODE_ENV === "Development") {
@@ -36,49 +34,42 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
 app.use(bodyParser.json());
 
-
-
 // Set Disk Storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-  cb(null, 'books')
-},
+    cb(null, "books");
+  },
   filename: function (req, file, cb) {
-  cb(null, req.query.docID)
-}
+    cb(null, req.query.docID);
+  },
 });
 
 const upload = multer({ storage: storage });
 
-
 //Handling Upload Request
-app.post('/uploadbook', upload.single('book'), (req, res, next) => {
-  const file = req.file
+app.post("/uploadbook", upload.single("book"), (req, res, next) => {
+  const file = req.file;
   console.log(file);
   if (!file) {
-    const error = new Error('Please upload a file')
-    error.httpStatusCode = 400
-    return next(error)
+    const error = new Error("Please upload a file");
+    error.httpStatusCode = 400;
+    return next(error);
   }
-    res.send(file)
-  
+  res.send(file);
 });
 
 //Handling Get File Request
-app.get('/book',(req,res,next)=>{
+app.get("/book", (req, res, next) => {
   const name = req.query.docID;
   res.download(`./books/${name}`);
-
 });
-
-
 
 //Routes
 
-app.post('/addreader', (req, res) => {
-//  console.log(req);
+app.post("/addreader", (req, res) => {
+  //  console.log(req);
   console.log(req.body);
-  const email=req.body.email;
+  const email = req.body.email;
   console.log(email);
   const newReader = {
     email: req.body.email,
@@ -90,22 +81,21 @@ app.post('/addreader', (req, res) => {
     console.log(user);
     console.log(user.length);
 
-    if(user.length > 0){
-      console.log("user : " , user.length);
-      res.send('Already Added')
-    }
-    else{
+    if (user.length > 0) {
+      console.log("user : ", user.length);
+      res.send("Already Added");
+    } else {
       console.log("not");
       Reader.create(newReader)
         .then((res) => console.log(res))
         .catch((err) => console.log(err));
 
-      res.send('success');
+      res.send("success");
     }
   });
 });
 
-app.get('/checkauthor', (req, res) => {
+app.get("/checkauthor", (req, res) => {
   const email = req.query.email;
   Author.find({ email }, (err, user) => {
     console.log(err);
@@ -114,7 +104,7 @@ app.get('/checkauthor', (req, res) => {
   });
 });
 
-app.post('/addauthor', (req, res) => {
+app.post("/addauthor", (req, res) => {
   console.log(req.cookies);
   console.log(req.body.name);
 
@@ -123,15 +113,15 @@ app.post('/addauthor', (req, res) => {
     GID: req.body.GID,
     Fname: req.body.fname,
     Lname: req.body.lname,
-    Mnumber : req.body.mobile,
-    Twitter : req.body.twitter,
-    City : req.body.city,
-    State : req.body.state,
-    Country : req.body.country,
-    Company : req.body.company,
-    Clocation : req.body.location,
-    Bio : req.body.AboutYourself,
-    Website : req.body.website,
+    Mnumber: req.body.mobile,
+    Twitter: req.body.twitter,
+    City: req.body.city,
+    State: req.body.state,
+    Country: req.body.country,
+    Company: req.body.company,
+    Clocation: req.body.location,
+    Bio: req.body.AboutYourself,
+    Website: req.body.website,
     picUrl: req.body.imgUrl,
     linkedInUrl: req.body.linkedInUrl,
   };
@@ -139,31 +129,31 @@ app.post('/addauthor', (req, res) => {
 
   Author.find({ email: req.body.email }, (err, user) => {
     console.log(err);
-    if(user.length > 0){
+    if (user.length > 0) {
       Author.updateOne(
-        {email : req.body.email},
+        { email: req.body.email },
         {
-          $set : {
-             ...user, ...newAuthor 
+          $set: {
+            ...user,
+            ...newAuthor,
           },
         }
       )
-      .then((res)=> console.log(res))
-      .catch((err)=> console.log(err));
-    }
-    else{
+        .then((res) => console.log(res))
+        .catch((err) => console.log(err));
+    } else {
       Author.create(newAuthor)
         .then((res) => console.log(res))
         .catch((err) => console.log(err));
     }
-    res.send('success');
+    res.send("success");
   });
 });
 
-app.get('/profile', (req, res) => {
+app.get("/profile", (req, res) => {
   const email = req.query.email;
   Author.find({ email })
-    .populate('books')
+    .populate("books")
     .exec((err, user) => {
       if (err) {
         console.log(err);
@@ -172,13 +162,12 @@ app.get('/profile', (req, res) => {
     });
 });
 
-
-app.get('/home', (req, res) => {
+app.get("/home/genres", (req, res) => {
   const genre = req.query.genre;
 
-  Book.find(genre ? { genres: genre , state : "Published"} : {state : "Published"})
+  Book.find({ genres: genre, state: "Published" })
     .sort({ date: -1 })
-    .populate('author')
+    .populate("author")
     .exec((err, books) => {
       if (err) {
         console.log(err);
@@ -187,11 +176,12 @@ app.get('/home', (req, res) => {
     });
 });
 
-app.get('/pendingrequest', (req, res) => {
+app.get("/search", (req, res) => {
+  const name = req.query.name;
 
-  Book.find( {state : "Pending"})
-    .sort({ date: -1 })
-    .populate('author')
+  Book.find({ $text: { $search: name } }, { score: { $meta: "textScore" } })
+    .sort({ score: { $meta: "textScore" } })
+    .populate("author")
     .exec((err, books) => {
       if (err) {
         console.log(err);
@@ -200,29 +190,73 @@ app.get('/pendingrequest', (req, res) => {
     });
 });
 
-app.post('/startwriting', async (req, res) => {
+app.get("/authorlist", (req, res) => {
+  const name = req.query.name;
+
+  Author.find({ $text: { $search: name } }, { score: { $meta: "textScore" } })
+    .sort({ score: { $meta: "textScore" } })
+    .then((err, list) => {
+      if (err) {
+        console.log(err);
+      }
+      res.send(list);
+    });
+});
+
+app.get("/pendingrequest", (req, res) => {
+  Book.find({ state: "Pending" })
+    .sort({ date: -1 })
+    .populate("author")
+    .exec((err, books) => {
+      if (err) {
+        console.log(err);
+      }
+      res.send(books);
+    });
+});
+
+app.get("/checkbook", async (req, res) => {
+  const docID = req.query.docID;
+
+  await Book.find({ docID }, (err, info) => {
+    if (err) {
+      console.log(err);
+    }
+    if (info.length > 0) {
+      res.send(true);
+    } else {
+      res.send(false);
+    }
+  });
+});
+
+app.post("/startwriting", async (req, res) => {
   const email = req.query.email;
 
   let bookId;
   let authorId = req.body.authorId;
+  var Fname = "";
+  var Lname = "";
   if (!authorId) {
     await Author.findOne({ email }, (err, user) => {
       if (err) console.log(err);
       authorId = user._id;
+      Fname = user.Fname;
+      Lname = user.Lname;
       console.log(authorId);
     });
   }
 
   const newBook = {
-    author: authorId,
+    author: { id: authorId, Fname, Lname },
     imageUrl: req.body.imageUrl,
     title: req.body.title,
     description: req.body.description,
     genres: req.body.genres,
     state: "Editing",
-    docID : req.body.docID,
-    pdfUrl : req.body.pdfurl,
-    editor : [req.query.email]
+    docID: req.body.docID,
+    pdfUrl: req.body.pdfurl,
+    editor: [req.query.email],
   };
 
   await Book.create(newBook)
@@ -233,9 +267,9 @@ app.post('/startwriting', async (req, res) => {
     .catch((err) => console.log(err));
 
   await Book.findOne({ _id: bookId })
-    .populate('author')
+    .populate("author")
     .exec((err, book) => {
-      if (err) console.log("Error : ",err);
+      if (err) console.log("Error : ", err);
       console.log(book);
     });
 
@@ -247,10 +281,10 @@ app.post('/startwriting', async (req, res) => {
   );
   console.log(updatedAuthor);
 
-  res.send('successfully added book');
+  res.send("successfully added book");
 });
 
-app.post('/submit', async (req, res) => {
+app.post("/submit", async (req, res) => {
   let docID = req.query.docID;
 
   Book.updateOne(
@@ -270,10 +304,10 @@ app.post('/submit', async (req, res) => {
       console.log(res);
     })
     .catch((err) => console.log(err));
-  res.send('success');
+  res.send("success");
 });
 
-app.post('/publish', async (req, res) => {
+app.post("/publish", async (req, res) => {
   let docID = req.query.docID;
 
   Book.updateOne(
@@ -288,17 +322,17 @@ app.post('/publish', async (req, res) => {
       console.log(res);
     })
     .catch((err) => console.log(err));
-  res.send('success');
+  res.send("success");
 });
 
-app.post('/addchapter', async (req, res) => {
+app.post("/addchapter", async (req, res) => {
   let docID = req.query.docID;
 
   Book.updateOne(
     { docID },
     {
       $push: {
-        chapters : req.body.cname
+        chapters: req.body.cname,
       },
     }
   )
@@ -306,18 +340,17 @@ app.post('/addchapter', async (req, res) => {
       console.log(res);
     })
     .catch((err) => console.log(err));
-  res.send('success');
+  res.send("success");
 });
 
-
-app.post('/addeditor', async (req, res) => {
+app.post("/addeditor", async (req, res) => {
   let docID = req.query.docID;
 
   Book.updateOne(
     { docID },
     {
       $push: {
-        editor : req.body.email
+        editor: req.body.email,
       },
     }
   )
@@ -325,12 +358,10 @@ app.post('/addeditor', async (req, res) => {
       console.log(res);
     })
     .catch((err) => console.log(err));
-  res.send('success');
+  res.send("success");
 });
 
-
-
-app.post('/handlelike', async (req, res) => {
+app.post("/handlelike", async (req, res) => {
   let updatedBook;
 
   const bookId = req.query._id;
@@ -341,27 +372,34 @@ app.post('/handlelike', async (req, res) => {
   if (liked && authorId) {
     updatedBook = await Book.updateOne(
       { _id: BookId },
-      { $push: { 'likes.likers': authorId } }
+      { $push: { "likes.likers": authorId } }
     );
     console.log(updatedBook);
   } else {
     updatedBook = await Book.updateOne(
       { _id: req.query._id },
-      { $pull: { 'likes.likers': authorId } }
+      { $pull: { "likes.likers": authorId } }
     );
     console.log(updatedBook);
   }
 
-  res.send('success');
+  res.send("success");
 });
 
-app.post('/addcomment', (req, res) => {
+app.post("/addcomment", (req, res) => {
+  const GID = req.body.GID;
+  var id;
+
+  Reader.findOne({ GID }, (err, user) => {
+    id = user._id;
+  });
+
   Book.updateOne(
     { _id: req.body.BookId },
     {
       $push: {
         comments: {
-          commentBy: req.body.userId,
+          commentBy: id,
           comment: req.body.comment,
           Gname: req.body.Gname,
           GID: req.body.GID,
@@ -373,9 +411,5 @@ app.post('/addcomment', (req, res) => {
       console.log(res);
     })
     .catch((err) => console.log(err));
-  res.send('success');
+  res.send("success");
 });
-
-
-
-
