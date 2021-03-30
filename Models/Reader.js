@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
 const readerSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-      },
+  name: {
+    type: String,
+    required: true,
+  },
   email: {
     type: String,
     required: true,
@@ -14,6 +14,8 @@ const readerSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  MyList: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
+  Continue: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
   joined: {
     type: Date,
     default: Date.now,

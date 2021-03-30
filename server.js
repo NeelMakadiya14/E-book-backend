@@ -75,6 +75,8 @@ app.post("/addreader", (req, res) => {
     email: req.body.email,
     GID: req.body.GID,
     name: req.body.name,
+    MyList: [],
+    Continue: [],
   };
   Reader.find({ email }, (err, user) => {
     console.log(err);
@@ -192,14 +194,14 @@ app.get("/search", (req, res) => {
 
 app.get("/authorlist", (req, res) => {
   const name = req.query.name;
-
+  console.log(name);
   Author.find({ $text: { $search: name } }, { score: { $meta: "textScore" } })
     .sort({ score: { $meta: "textScore" } })
-    .then((err, list) => {
-      if (err) {
-        console.log(err);
-      }
+    .then((list) => {
       res.send(list);
+    })
+    .catch((err) => {
+      console.log(err);
     });
 });
 
@@ -412,4 +414,48 @@ app.post("/addcomment", (req, res) => {
     })
     .catch((err) => console.log(err));
   res.send("success");
+});
+
+app.post("/addtomylist", async (req, res) => {
+  const email = req.body.email;
+  const docID = req.body.docID;
+  console.log(email, docID);
+  const book = await Book.findOne({ docID });
+  console.log(book);
+  Reader.updateOne(
+    { email },
+    {
+      $push: {
+        MyList: book._id,
+      },
+    }
+  )
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
+app.post("/addtocr", async (req, res) => {
+  const email = req.body.email;
+  const docID = req.body.docID;
+
+  const book = await Book.findOne({ docID });
+
+  Reader.updateOne(
+    { email },
+    {
+      $push: {
+        Continue: book._id,
+      },
+    }
+  )
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
