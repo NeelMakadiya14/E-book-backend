@@ -2,21 +2,24 @@ const mongoose = require("mongoose");
 
 const bookSchema = new mongoose.Schema({
   author: {
-    // required: true,
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Author",
+    id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Author",
+    },
+    Fname: String,
+    Lname: String,
   },
   editor: {
-    type : [String]
+    type: [String],
   },
-  chapters : {
-    type : [String]
+  chapters: {
+    type: [String],
   },
-  docID : {
-    type : String,
-    required : true
+  docID: {
+    type: String,
+    required: true,
   },
-  pdfUrl : {
+  pdfUrl: {
     type: String,
   },
   imageUrl: String,
@@ -32,7 +35,7 @@ const bookSchema = new mongoose.Schema({
   genres: {
     type: [String],
   },
-  state : String,
+  state: String,
   comments: {
     type: [
       {
