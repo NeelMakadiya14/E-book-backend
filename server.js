@@ -235,6 +235,22 @@ app.get("/checkbook", async (req, res) => {
   });
 });
 
+app.get("/checkaccess", async (req, res) => {
+  const docID = req.query.docID;
+  const email = req.query.email;
+
+  Book.find({ docID, editor: email }, (err, books) => {
+    if (err) {
+      console.log(err);
+    }
+    if (books.length > 0) {
+      res.send(true);
+    } else {
+      res.send(false);
+    }
+  });
+});
+
 app.post("/startwriting", async (req, res) => {
   const email = req.query.email;
 
@@ -425,20 +441,27 @@ app.post("/addtomylist", async (req, res) => {
   console.log(email, docID);
   const book = await Book.findOne({ docID });
   console.log(book);
-  Reader.updateOne(
-    { email },
-    {
-      $push: {
-        MyList: book._id,
-      },
+
+  Reader.find({ email, MyList: book._id }, (err, reader) => {
+    if (reader.length > 0) {
+      res.send("Already Added to List");
+    } else {
+      Reader.updateOne(
+        { email },
+        {
+          $push: {
+            MyList: book._id,
+          },
+        }
+      )
+        .then((response) => {
+          res.send(response);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
-  )
-    .then((response) => {
-      res.send(response);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  });
 });
 
 app.post("/addtocr", async (req, res) => {
@@ -447,18 +470,24 @@ app.post("/addtocr", async (req, res) => {
 
   const book = await Book.findOne({ docID });
 
-  Reader.updateOne(
-    { email },
-    {
-      $push: {
-        Continue: book._id,
-      },
+  Reader.find({ email, MyList: book._id }, (err, reader) => {
+    if (reader.length > 0) {
+      res.send("Already Added to List");
+    } else {
+      Reader.updateOne(
+        { email },
+        {
+          $push: {
+            Continue: book._id,
+          },
+        }
+      )
+        .then((response) => {
+          res.send(response);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
-  )
-    .then((response) => {
-      res.send(response);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  });
 });
