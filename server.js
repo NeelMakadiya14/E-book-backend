@@ -259,9 +259,9 @@ app.post("/startwriting", async (req, res) => {
   var Fname = "";
   var Lname = "";
   if (!authorId) {
-    await Author.findOne({ email }, (err, user) => {
+    await Author.findOne({ email }, async (err, user) => {
       if (err) console.log(err);
-      if(user){
+      if (user) {
         authorId = user._id;
         Fname = user.Fname;
         Lname = user.Lname;
@@ -278,21 +278,21 @@ app.post("/startwriting", async (req, res) => {
           pdfUrl: req.body.pdfurl,
           editor: [req.query.email],
         };
-      
-        await Book.create(newBook)
+
+        Book.create(newBook)
           .then((res) => {
             console.log(res);
             bookId = res._id;
           })
           .catch((err) => console.log(err));
-      
+
         await Book.findOne({ _id: bookId })
           .populate("author")
           .exec((err, book) => {
             if (err) console.log("Error : ", err);
             console.log(book);
           });
-      
+
         const updatedAuthor = await Author.update(
           { _id: authorId },
           {
@@ -300,17 +300,13 @@ app.post("/startwriting", async (req, res) => {
           }
         );
         console.log(updatedAuthor);
-      
+
         res.send("successfully added book");
-      }
-      else{
+      } else {
         res.send("Please Complate Your Profile First");
       }
-     
     });
   }
-
-  
 });
 
 app.post("/submit", async (req, res) => {
