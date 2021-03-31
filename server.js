@@ -261,48 +261,56 @@ app.post("/startwriting", async (req, res) => {
   if (!authorId) {
     await Author.findOne({ email }, (err, user) => {
       if (err) console.log(err);
-      authorId = user._id;
-      Fname = user.Fname;
-      Lname = user.Lname;
-      console.log(authorId);
+      if(user){
+        authorId = user._id;
+        Fname = user.Fname;
+        Lname = user.Lname;
+        console.log(authorId);
+
+        const newBook = {
+          author: { id: authorId, Fname, Lname },
+          imageUrl: req.body.imageUrl,
+          title: req.body.title,
+          description: req.body.description,
+          genres: req.body.genres,
+          state: "Editing",
+          docID: req.body.docID,
+          pdfUrl: req.body.pdfurl,
+          editor: [req.query.email],
+        };
+      
+        await Book.create(newBook)
+          .then((res) => {
+            console.log(res);
+            bookId = res._id;
+          })
+          .catch((err) => console.log(err));
+      
+        await Book.findOne({ _id: bookId })
+          .populate("author")
+          .exec((err, book) => {
+            if (err) console.log("Error : ", err);
+            console.log(book);
+          });
+      
+        const updatedAuthor = await Author.update(
+          { _id: authorId },
+          {
+            $push: { books: bookId },
+          }
+        );
+        console.log(updatedAuthor);
+      
+        res.send("successfully added book");
+      }
+      else{
+        res.send("Please Complate Your Profile First");
+      }
+     
     });
   }
 
-  const newBook = {
-    author: { id: authorId, Fname, Lname },
-    imageUrl: req.body.imageUrl,
-    title: req.body.title,
-    description: req.body.description,
-    genres: req.body.genres,
-    state: "Editing",
-    docID: req.body.docID,
-    pdfUrl: req.body.pdfurl,
-    editor: [req.query.email],
-  };
-
-  await Book.create(newBook)
-    .then((res) => {
-      console.log(res);
-      bookId = res._id;
-    })
-    .catch((err) => console.log(err));
-
-  await Book.findOne({ _id: bookId })
-    .populate("author")
-    .exec((err, book) => {
-      if (err) console.log("Error : ", err);
-      console.log(book);
-    });
-
-  const updatedAuthor = await Author.update(
-    { _id: authorId },
-    {
-      $push: { books: bookId },
-    }
-  );
-  console.log(updatedAuthor);
-
-  res.send("successfully added book");
+  
 });
 
 app.post("/submit", async (req, res) => {
