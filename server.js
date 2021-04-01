@@ -64,7 +64,8 @@ app.post("/uploadbook", upload.single("book"), (req, res, next) => {
 //Handling Get File Request
 app.get("/book", (req, res, next) => {
   const name = req.query.docID + ".pdf";
-  res.download(`./books/${name}`);
+  // res.download(`./books/${name}`);
+  res.sendFile(__dirname + `/books/${name}`);
 });
 
 //Routes
