@@ -19,9 +19,6 @@ const bookSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  pdfUrl: {
-    type: String,
-  },
   imageUrl: String,
   title: {
     type: String,

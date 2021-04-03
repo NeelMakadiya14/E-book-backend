@@ -254,7 +254,7 @@ app.get("/checkaccess", async (req, res) => {
 
 app.post("/startwriting", async (req, res) => {
   const email = req.query.email;
-
+  console.log(email);
   let bookId;
   let authorId = req.body.authorId;
   var Fname = "";
@@ -276,7 +276,6 @@ app.post("/startwriting", async (req, res) => {
           genres: req.body.genres,
           state: "Editing",
           docID: req.body.docID,
-          pdfUrl: req.body.pdfurl,
           editor: [req.query.email],
         };
 
@@ -349,6 +348,31 @@ app.post("/publish", async (req, res) => {
     })
     .catch((err) => console.log(err));
   res.send("success");
+});
+
+app.get("/count/unfinished", async (req, res) => {
+  const email = req.query.email;
+  console.log(email);
+  await Author.findOne({ email }, async (err, user) => {
+    if (err) console.log(err);
+    if (user) {
+      console.log(user);
+      const authorID = user._id;
+
+      Book.find({
+        "author.id": authorID,
+        $or: [{ state: "Editing" }, { state: "Pending" }],
+      })
+        .then((info) => {
+          res.send({ count: info.length });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    } else {
+      res.send("Author Not Found");
+    }
+  });
 });
 
 app.post("/addchapter", async (req, res) => {
