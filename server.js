@@ -14,7 +14,7 @@ app.use(cors());
 
 const server = http.createServer(app);
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5001;
 server.listen(port, () => console.log(`server is running on port ${port}`));
 
 //importing Models
@@ -168,6 +168,41 @@ app.get("/profile", (req, res) => {
     });
 });
 
+app.get("/mylist", (req, res) => {
+  const email = req.query.email;
+  console.log(email);
+  Reader.findOne({ email })
+    .populate("MyList")
+    .exec((err, user) => {
+      if (err) {
+        console.log(err);
+      }
+      if (user) {
+        res.send(user.MyList);
+      } else {
+        res.send("User Not Found");
+      }
+    });
+});
+
+app.get("/cr", async (req, res) => {
+  const email = req.query.email;
+  console.log(email);
+
+  Reader.findOne({ email })
+    .populate("Continue")
+    .exec((err, user) => {
+      if (err) {
+        console.log(err);
+      }
+      if (user) {
+        res.send(user.Continue);
+      } else {
+        res.send("User Not Found");
+      }
+    });
+});
+
 app.get("/home/genres", (req, res) => {
   const genre = req.query.genre;
 
@@ -185,7 +220,10 @@ app.get("/home/genres", (req, res) => {
 app.get("/search", (req, res) => {
   const name = req.query.name;
 
-  Book.find({ $text: { $search: name } }, { score: { $meta: "textScore" } })
+  Book.find(
+    { state: "Published", $text: { $search: name } },
+    { score: { $meta: "textScore" } }
+  )
     .sort({ score: { $meta: "textScore" } })
     .populate("author")
     .exec((err, books) => {
@@ -196,7 +234,7 @@ app.get("/search", (req, res) => {
     });
 });
 
-app.get("/authorlist", (req, res) => {
+app.get("/authorlist", async (req, res) => {
   const name = req.query.name;
   console.log(name);
   Author.find({ $text: { $search: name } }, { score: { $meta: "textScore" } })
@@ -209,7 +247,7 @@ app.get("/authorlist", (req, res) => {
     });
 });
 
-app.get("/pendingrequest", (req, res) => {
+app.get("/pendingrequest", async (req, res) => {
   Book.find({ state: "Pending" })
     .sort({ date: -1 })
     .populate("author")
@@ -279,7 +317,7 @@ app.post("/startwriting", async (req, res) => {
           editor: [req.query.email],
         };
 
-        Book.create(newBook)
+        await Book.create(newBook)
           .then((res) => {
             console.log(res);
             bookId = res._id;
@@ -436,11 +474,11 @@ app.post("/handlelike", async (req, res) => {
   res.send("success");
 });
 
-app.post("/addcomment", (req, res) => {
+app.post("/addcomment", async (req, res) => {
   const GID = req.body.GID;
   var id;
 
-  Reader.findOne({ GID }, (err, user) => {
+  await Reader.findOne({ GID }, (err, user) => {
     id = user._id;
   });
 
