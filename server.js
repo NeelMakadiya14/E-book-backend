@@ -64,7 +64,8 @@ app.post("/uploadbook", upload.single("book"), (req, res, next) => {
 //Handling Get File Request
 app.get("/book", (req, res, next) => {
   const name = req.query.docID + ".pdf";
-  res.download(`./books/${name}`);
+  // res.download(`./books/${name}`);
+  res.sendFile(__dirname + `/books/${name}`);
 });
 
 //Routes
@@ -235,58 +236,77 @@ app.get("/checkbook", async (req, res) => {
   });
 });
 
-app.post("/startwriting", async (req, res) => {
+app.get("/checkaccess", async (req, res) => {
+  const docID = req.query.docID;
   const email = req.query.email;
 
+  Book.find({ docID, editor: email }, (err, books) => {
+    if (err) {
+      console.log(err);
+    }
+    if (books.length > 0) {
+      res.send(true);
+    } else {
+      res.send(false);
+    }
+  });
+});
+
+app.post("/startwriting", async (req, res) => {
+  const email = req.query.email;
+  console.log(email);
   let bookId;
   let authorId = req.body.authorId;
   var Fname = "";
   var Lname = "";
   if (!authorId) {
-    await Author.findOne({ email }, (err, user) => {
+    await Author.findOne({ email }, async (err, user) => {
       if (err) console.log(err);
-      authorId = user._id;
-      Fname = user.Fname;
-      Lname = user.Lname;
-      console.log(authorId);
+      if (user) {
+        authorId = user._id;
+        Fname = user.Fname;
+        Lname = user.Lname;
+        console.log(authorId);
+
+        const newBook = {
+          author: { id: authorId, Fname, Lname },
+          imageUrl: req.body.imageUrl,
+          title: req.body.title,
+          description: req.body.description,
+          genres: req.body.genres,
+          state: "Editing",
+          docID: req.body.docID,
+          editor: [req.query.email],
+        };
+
+        Book.create(newBook)
+          .then((res) => {
+            console.log(res);
+            bookId = res._id;
+          })
+          .catch((err) => console.log(err));
+
+        await Book.findOne({ _id: bookId })
+          .populate("author")
+          .exec((err, book) => {
+            if (err) console.log("Error : ", err);
+            console.log(book);
+          });
+
+        const updatedAuthor = await Author.update(
+          { _id: authorId },
+          {
+            $push: { books: bookId },
+          }
+        );
+        console.log(updatedAuthor);
+
+        res.send("successfully added book");
+      } else {
+        res.send("Please Complate Your Profile First");
+      }
     });
   }
-
-  const newBook = {
-    author: { id: authorId, Fname, Lname },
-    imageUrl: req.body.imageUrl,
-    title: req.body.title,
-    description: req.body.description,
-    genres: req.body.genres,
-    state: "Editing",
-    docID: req.body.docID,
-    pdfUrl: req.body.pdfurl,
-    editor: [req.query.email],
-  };
-
-  await Book.create(newBook)
-    .then((res) => {
-      console.log(res);
-      bookId = res._id;
-    })
-    .catch((err) => console.log(err));
-
-  await Book.findOne({ _id: bookId })
-    .populate("author")
-    .exec((err, book) => {
-      if (err) console.log("Error : ", err);
-      console.log(book);
-    });
-
-  const updatedAuthor = await Author.update(
-    { _id: authorId },
-    {
-      $push: { books: bookId },
-    }
-  );
-  console.log(updatedAuthor);
-
-  res.send("successfully added book");
 });
 
 app.post("/submit", async (req, res) => {
@@ -328,6 +348,31 @@ app.post("/publish", async (req, res) => {
     })
     .catch((err) => console.log(err));
   res.send("success");
+});
+
+app.get("/count/unfinished", async (req, res) => {
+  const email = req.query.email;
+  console.log(email);
+  await Author.findOne({ email }, async (err, user) => {
+    if (err) console.log(err);
+    if (user) {
+      console.log(user);
+      const authorID = user._id;
+
+      Book.find({
+        "author.id": authorID,
+        $or: [{ state: "Editing" }, { state: "Pending" }],
+      })
+        .then((info) => {
+          res.send({ count: info.length });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    } else {
+      res.send("Author Not Found");
+    }
+  });
 });
 
 app.post("/addchapter", async (req, res) => {
@@ -425,20 +470,27 @@ app.post("/addtomylist", async (req, res) => {
   console.log(email, docID);
   const book = await Book.findOne({ docID });
   console.log(book);
-  Reader.updateOne(
-    { email },
-    {
-      $push: {
-        MyList: book._id,
-      },
+
+  Reader.find({ email, MyList: book._id }, (err, reader) => {
+    if (reader.length > 0) {
+      res.send("Already Added to List");
+    } else {
+      Reader.updateOne(
+        { email },
+        {
+          $push: {
+            MyList: book._id,
+          },
+        }
+      )
+        .then((response) => {
+          res.send(response);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
-  )
-    .then((response) => {
-      res.send(response);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  });
 });
 
 app.post("/addtocr", async (req, res) => {
@@ -447,18 +499,24 @@ app.post("/addtocr", async (req, res) => {
 
   const book = await Book.findOne({ docID });
 
-  Reader.updateOne(
-    { email },
-    {
-      $push: {
-        Continue: book._id,
-      },
+  Reader.find({ email, MyList: book._id }, (err, reader) => {
+    if (reader.length > 0) {
+      res.send("Already Added to List");
+    } else {
+      Reader.updateOne(
+        { email },
+        {
+          $push: {
+            Continue: book._id,
+          },
+        }
+      )
+        .then((response) => {
+          res.send(response);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
-  )
-    .then((response) => {
-      res.send(response);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  });
 });
