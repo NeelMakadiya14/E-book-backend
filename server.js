@@ -117,6 +117,7 @@ app.post("/addauthor", (req, res) => {
   const newAuthor = {
     email: req.body.email,
     GID: req.body.GID,
+    Name: req.body.fname + req.body.lname,
     Fname: req.body.fname,
     Lname: req.body.lname,
     Mnumber: req.body.mobile,
@@ -236,15 +237,33 @@ app.get("/search", (req, res) => {
 
 app.get("/authorlist", async (req, res) => {
   const name = req.query.name;
+  console.log("called");
   console.log(name);
-  Author.find({ $text: { $search: name } }, { score: { $meta: "textScore" } })
-    .sort({ score: { $meta: "textScore" } })
-    .then((list) => {
-      res.send(list);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+
+  if (name) {
+    const searchKey = new RegExp(name, "i");
+    Author.find({ Name: searchKey })
+      .limit(7)
+      .exec(function (err, results) {
+        if (err) {
+          console.log(err);
+          res.send(err);
+        }
+        console.log(results);
+        res.send(results);
+      });
+  } else {
+    res.send([]);
+  }
+
+  // Author.find({ $text: { $search: name } }, { score: { $meta: "textScore" } })
+  //   .sort({ score: { $meta: "textScore" } })
+  //   .then((list) => {
+  //     res.send(list);
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //   });
 });
 
 app.get("/pendingrequest", async (req, res) => {
@@ -266,6 +285,7 @@ app.get("/checkbook", async (req, res) => {
     if (err) {
       console.log(err);
     }
+    console.log(info);
     if (info.length > 0) {
       res.send(true);
     } else {
