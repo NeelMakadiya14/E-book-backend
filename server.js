@@ -531,7 +531,22 @@ app.post("/addtomylist", async (req, res) => {
 
   Reader.find({ email, MyList: book._id }, (err, reader) => {
     if (reader.length > 0) {
-      res.send("Already Added to List");
+      Reader.updateOne(
+        { email },
+        {
+          $pull: {
+            MyList: book._id,
+          },
+        }
+      )
+        .then((response) => {
+          console.log("removed");
+          res.send("removed");
+        })
+        .catch((err) => {
+          console.log(err);
+          console.log("added");
+        });
     } else {
       Reader.updateOne(
         { email },
@@ -542,7 +557,7 @@ app.post("/addtomylist", async (req, res) => {
         }
       )
         .then((response) => {
-          res.send(response);
+          res.send("added");
         })
         .catch((err) => {
           console.log(err);
