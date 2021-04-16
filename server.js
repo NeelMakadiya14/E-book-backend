@@ -516,7 +516,7 @@ app.post("/addcomment", async (req, res) => {
   });
 
   Book.updateOne(
-    { _id: req.body.BookId },
+    { docID: req.body.docID },
     {
       $push: {
         comments: {
