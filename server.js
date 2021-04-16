@@ -494,6 +494,19 @@ app.post("/handlelike", async (req, res) => {
   res.send("success");
 });
 
+app.get("/getcomment", async (req, res) => {
+  const docID = req.query.docID;
+
+  Book.findOne({ docID })
+    .then((book) => {
+      console.log(book);
+      res.send(book.comments);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+});
+
 app.post("/addcomment", async (req, res) => {
   const GID = req.body.GID;
   var id;
