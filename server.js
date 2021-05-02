@@ -408,6 +408,24 @@ app.post("/publish", async (req, res) => {
   res.send("success");
 });
 
+app.post("/reject", async (req, res) => {
+  let docID = req.query.docID;
+
+  Book.updateOne(
+    { docID },
+    {
+      $set: {
+        state: "Editing",
+      },
+    }
+  )
+    .then((res) => {
+      console.log(res);
+    })
+    .catch((err) => console.log(err));
+  res.send("success");
+});
+
 app.get("/count/unfinished", async (req, res) => {
   const email = req.query.email;
   console.log(email);
