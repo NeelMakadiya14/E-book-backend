@@ -294,6 +294,17 @@ app.get("/checkbook", async (req, res) => {
   });
 });
 
+app.get("/bookbyid", async (req, res) => {
+  const docID = req.query.docID;
+
+  await Book.findOne({ docID }, (err, info) => {
+    if (err) {
+      console.log(err);
+    }
+    res.send(info);
+  });
+});
+
 app.get("/checkaccess", async (req, res) => {
   const docID = req.query.docID;
   const email = req.query.email;
@@ -398,6 +409,24 @@ app.post("/publish", async (req, res) => {
     {
       $set: {
         state: "Published",
+      },
+    }
+  )
+    .then((res) => {
+      console.log(res);
+    })
+    .catch((err) => console.log(err));
+  res.send("success");
+});
+
+app.post("/reject", async (req, res) => {
+  let docID = req.query.docID;
+
+  Book.updateOne(
+    { docID },
+    {
+      $set: {
+        state: "Editing",
       },
     }
   )
